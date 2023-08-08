@@ -154,7 +154,7 @@ func (b *buffer) takeBuffer(length int) ([]byte, error) {
 // known to be smaller than defaultBufSize.
 // Only one buffer (total) can be used at a time.
 func (b *buffer) takeSmallBuffer(length int) ([]byte, error) {
-	if b.length > 0 {
+	if !b.empty() {
 		return nil, ErrBusyBuffer
 	}
 	return b.buf[:length], nil
@@ -165,7 +165,7 @@ func (b *buffer) takeSmallBuffer(length int) ([]byte, error) {
 // cap and len of the returned buffer will be equal.
 // Only one buffer (total) can be used at a time.
 func (b *buffer) takeCompleteBuffer() ([]byte, error) {
-	if b.length > 0 {
+	if !b.empty() {
 		return nil, ErrBusyBuffer
 	}
 	return b.buf, nil
@@ -173,10 +173,16 @@ func (b *buffer) takeCompleteBuffer() ([]byte, error) {
 
 // store stores buf, an updated buffer, if its suitable to do so.
 func (b *buffer) store(buf []byte) error {
-	if b.length > 0 {
+	if !b.empty() {
 		return ErrBusyBuffer
 	} else if cap(buf) <= maxPacketSize && cap(buf) > cap(b.buf) {
 		b.buf = buf[:cap(buf)]
 	}
 	return nil
+}
+
+// empty returns true if the buffer is empty and does not contain
+// any unread data.
+func (b *buffer) empty() bool {
+	return b.length == 0
 }
